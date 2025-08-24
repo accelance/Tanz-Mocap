@@ -6,7 +6,9 @@ public class DistanceColorChanger : MonoBehaviour
     public GameObject target;
 
     [Tooltip("The distance at which the color becomes fully red.")]
-    public float maxDistance = 10f;
+    public float maxDistance = 5f;
+
+    public Material GhostMaterial;
 
     private Renderer objRenderer;
     private Material objMaterial;
@@ -16,26 +18,20 @@ public class DistanceColorChanger : MonoBehaviour
         objRenderer = GetComponent<Renderer>();
         if (objRenderer != null)
         {
-            // Use a copy of the material so we don't change the shared material
             objMaterial = objRenderer.material;
         }
-        else
-        {
-            Debug.LogError("No Renderer found on the GameObject.");
-        }
-
-        if (target == null)
-        {
-            Debug.LogError("Target GameObject not assigned.");
-        }
+        //target = GameObject.Find("Default CandidateComputer");
     }
 
     void Update()
     {
         if (target == null || objMaterial == null)
+        {
+           //target = GameObject.Find("Default CandidateComputer");
             return;
+        }
 
-        float distance = Vector3.Distance(transform.position, target.transform.position);
+        float distance = Vector2.Distance(new Vector2(transform.position.x, transform.position.z), new Vector2(target.transform.position.x, target.transform.position.z));
 
         // Normalize distance to a 0-1 range
         float t = Mathf.Clamp01(distance / maxDistance);
@@ -44,5 +40,6 @@ public class DistanceColorChanger : MonoBehaviour
         Color color = Color.Lerp(Color.green, Color.red, t);
 
         objMaterial.color = color;
+        GhostMaterial.SetColor("_BaseColor", new Color(color.r, color.g, color.b, GhostMaterial.color.a));
     }
 }

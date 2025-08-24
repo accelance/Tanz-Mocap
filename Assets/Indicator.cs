@@ -15,13 +15,14 @@ public class Indicator : MonoBehaviour
 
     public void setDancer(int dancer)
     {
+        Debug.Log(dancer);
         attachedDancer = possibleDancers[dancer];
     }
 
     // Update is called once per frame
     void Update()
     {
-        transform.position = new Vector3(attachedDancer.transform.position.x, 0, attachedDancer.transform.position.z);
+        transform.position = new Vector3(attachedDancer.transform.position.x, transform.position.y, attachedDancer.transform.position.z);
         //material.SetVector("_playerPosition", Player.transform.position);
 
     }
