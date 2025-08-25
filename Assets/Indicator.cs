@@ -12,11 +12,13 @@ public class Indicator : MonoBehaviour
     public Material material;  // Assign in inspector or via script
 
 
-
+    Indicator i;
     public void setDancer(int dancer)
     {
         Debug.Log(dancer);
         attachedDancer = possibleDancers[dancer];
+    
+        i = GetComponent<Indicator>();
     }
 
     // Update is called once per frame

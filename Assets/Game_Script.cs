@@ -111,25 +111,24 @@ public class Game_Script : MonoBehaviour
         gameActive = false;
         paused = false;
         animator.speed = speed;
-
+        //GameManager.Instance.Dance();
     }
 
     public void change_Speed(float speed2)
     {
         speed = speed2;
-        animator.speed = speed2;
     }
 
 
     public void StepBack5Frames()
     {
         
-        StepFrames(-2);
+        StepFrames(-1);
     }
 
     public void StepForward5Frames()
     {
-        StepFrames(2);
+        StepFrames(1);
     }
 
     private void StepFrames(int frameCount)

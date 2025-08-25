@@ -27,7 +27,10 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(this.gameObject);
 
         startPlayingMusic();
+
+        //StartCoroutine(test());
     }
+
 
 
     public void Dance()
@@ -82,7 +85,23 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    System.Collections.IEnumerator test() {
 
+        yield return new WaitForSeconds(3.0f);
+        Dance();
+    }
+
+    public void cycleDancer() {
+        int currentDancer = int.Parse(settings["Dancer"]);
+
+        currentDancer = (currentDancer + 1) % 4;
+
+        Dancer(currentDancer.ToString());
+
+
+
+
+    }
 
 
 
