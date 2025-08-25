@@ -28,6 +28,8 @@ public class GameManager : MonoBehaviour
 
     public float speed = 1.0f;
 
+    List<Material>[] AllMaterials;
+
     Animator animator;
 
     void Start()
@@ -35,6 +37,31 @@ public class GameManager : MonoBehaviour
         animator = tanzParent.GetComponent<Animator>();
         Instance = this;
         DontDestroyOnLoad(this.gameObject);
+
+
+        AllMaterials = new List<Material>[4];
+        
+
+        DancerMeshes = new GameObject[4];
+        
+        for (int i = 0; i < tanzParent.transform.childCount; i++)
+        {
+            bool hasMesh = tanzParent.transform.GetChild(i).GetComponent<SkinnedMeshRenderer>() != null;
+            if (hasMesh)
+            {
+                DancerMeshes[i] = tanzParent.transform.GetChild(i).gameObject;
+            }
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            List<Material> m = new List<Material>();
+            DancerMeshes[i].GetComponent<SkinnedMeshRenderer>().GetMaterials(m);
+            AllMaterials[i] = m;
+        }
+
+        switchDancer(dancer);
+
         startPlayingMusic();
     }
 
@@ -48,7 +75,7 @@ public class GameManager : MonoBehaviour
 
             gameActive = true;
 
-            animator.SetTrigger("Start_Trigger");
+            animator.SetTrigger("PlayAll");
 
             StartCoroutine(measure_Average_Distance());
         }
@@ -59,14 +86,29 @@ public class GameManager : MonoBehaviour
         dancer = new_dancer;
         for (int i = 0; i < DancerMeshes.Length; i++)
         {
-            DancerMeshes[i].GetComponent<SkinnedMeshRenderer>().SetMaterials(new List<Material> { ((i == dancer) ? materials[1] : materials[0])});
+            List<Material> m;
+            if (i == dancer)
+            {
+                // Create a new list with the same length, filled with materials[2]
+                int count = AllMaterials[i].Count;
+                m = new List<Material>();
+                for (int j = 0; j < count; j++)
+                {
+                    m.Add(materials[1]);
+                }
+            }
+            else
+            {
+                // Use the original materials for other dancers
+                m = new List<Material>(AllMaterials[i]);
+            }
+            DancerMeshes[i].GetComponent<SkinnedMeshRenderer>().SetMaterials(m);
         }
     }
 
 
     public void end_dance_callback()
     {
-
         gameActive = false;
     }
 
@@ -124,7 +166,7 @@ public class GameManager : MonoBehaviour
             if (!paused)
             {
                 //TODO update measure function
-                //distances.Add(Vector2.Distance(new Vector2(indicator.transform.position.x, indicator.transform.position.z), new Vector2(dcc.target.transform.position.x, dcc.target.transform.position.z)));
+                distances.Add(Vector2.Distance(new Vector2(dcc.possibleDancers[dancer].transform.position.x, dcc.possibleDancers[dancer].transform.position.z), new Vector2(dcc.target.transform.position.x, dcc.target.transform.position.z)));
                 yield return new WaitForSeconds(0.5f);
             }
             else
@@ -141,6 +183,8 @@ public class GameManager : MonoBehaviour
         }
 
         Scoreboard.text = averageDistance.ToString() + "\n" + Scoreboard.text;
+
+        Debug.Log("Average Distance: " + averageDistance);
     }
 
     public void Pause()
@@ -163,6 +207,8 @@ public class GameManager : MonoBehaviour
     public void change_Speed(float new_speed)
     {
         speed = new_speed;
+        animator.speed = speed;
+
     }
 
 
