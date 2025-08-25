@@ -13,6 +13,6 @@ public class SpeedSlider : MonoBehaviour
     // Update is called once per frame
     public void Update_Speed()
     {
-        Game_Script.Instance.change_Speed(slider.value);
+        GameManager.Instance.change_Speed(slider.value);
     }
 }

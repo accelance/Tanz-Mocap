@@ -12,6 +12,6 @@ public class Volume_Changer : MonoBehaviour
     // Update is called once per frame
     public void Update_Volume()
     {
-        GameManager.Instance.Volume(slider.value.ToString());
+        GameManager.Instance.Volume(slider.value);
     }
 }

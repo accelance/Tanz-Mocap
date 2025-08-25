@@ -21,20 +21,16 @@ public class DistanceColorChanger : MonoBehaviour
         if (objRenderer != null)
         {
             objMaterial = objRenderer.material;
-        }
-        
-        //target = GameObject.Find("Default CandidateComputer");
+        }     
     }
 
     void Update()
     {
-        Vector3 dancerPosition = possibleDancers[int.Parse(GameManager.Instance.settings["Dancer"])].transform.position;
+        Vector3 dancerPosition = possibleDancers[GameManager.Instance.dancer].transform.position;
         if (target == null || objMaterial == null)
         {
-           //target = GameObject.Find("Default CandidateComputer");
             return;
         }
-        Debug.Log(target.transform.position);
 
         float distance = Vector2.Distance(new Vector2(dancerPosition.x, dancerPosition.z), new Vector2(target.transform.position.x, target.transform.position.z));
 

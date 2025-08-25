@@ -1,65 +1,86 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using System.Collections;
+using TMPro;
 
 
 public class GameManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public static GameManager Instance;
     public Dictionary<string, string> settings;
 
     public GameObject[] DancerMeshes;
 
+    public GameObject tanzParent;
+
     public GameObject AudioSourceParent;
 
     public Material[] materials;
-    public static GameManager Instance;
 
+    public TMP_Text Scoreboard;
+    public bool gameActive = false;
+    public bool paused = false;
+    public float frameRate = 60f;
+
+    public float volume = 1.0f;
+
+    public int dancer = 0;
+
+    public float speed = 1.0f;
+
+    Animator animator;
 
     void Start()
     {
-        settings = new Dictionary<string, string>();
-        settings.Add("Volume", "1.0");
-        settings.Add("Dancer", "0");
-        settings.Add("Speed", "1");
-
+        animator = tanzParent.GetComponent<Animator>();
         Instance = this;
         DontDestroyOnLoad(this.gameObject);
-
         startPlayingMusic();
-
-        //StartCoroutine(test());
     }
 
 
 
     public void Dance()
     {
-        Game_Script.Instance.startDance(int.Parse(settings["Dancer"]));
-
-    }
-
-    public void Dancer(string dancer)
-    {
-        Debug.Log(dancer);
-        settings["Dancer"] = dancer;
-
-
-        for (int i = 0; i < DancerMeshes.Length; i++)
+        if (!gameActive)
         {
-            DancerMeshes[i].GetComponent<SkinnedMeshRenderer>().SetMaterials(new List<Material> { ((i == int.Parse(dancer)) ? materials[1] : materials[0]) });
+            int dancer_index = dancer;
+
+            gameActive = true;
+
+            animator.SetTrigger("Start_Trigger");
+
+            StartCoroutine(measure_Average_Distance());
         }
     }
 
-    public void Volume(string volume)
+    public void switchDancer(int new_dancer)
     {
-        Debug.Log(volume);
-
-        settings["Volume"] = volume;
-
-        updateVolume(float.Parse(volume));
+        dancer = new_dancer;
+        for (int i = 0; i < DancerMeshes.Length; i++)
+        {
+            DancerMeshes[i].GetComponent<SkinnedMeshRenderer>().SetMaterials(new List<Material> { ((i == dancer) ? materials[1] : materials[0])});
+        }
     }
 
+
+    public void end_dance_callback()
+    {
+
+        gameActive = false;
+    }
+
+
+
+    public void Volume(float new_volume)
+    {
+        volume = new_volume;
+
+        for (int i = 0; i < AudioSourceParent.transform.childCount; i++)
+        {
+            AudioSourceParent.transform.GetChild(i).GetComponent<AudioSource>().volume = new_volume;
+        }
+    }
 
 
     public void change_Ghost_Transparency(float value)
@@ -77,31 +98,116 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void updateVolume(float vol)
+
+    public void cycleDancer()
     {
-        for (int i = 0; i < AudioSourceParent.transform.childCount; i++)
-        {
-            AudioSourceParent.transform.GetChild(i).GetComponent<AudioSource>().volume = vol;
-        }
-    }
-
-    System.Collections.IEnumerator test() {
-
-        yield return new WaitForSeconds(3.0f);
-        Dance();
-    }
-
-    public void cycleDancer() {
-        int currentDancer = int.Parse(settings["Dancer"]);
+        int currentDancer = dancer;
 
         currentDancer = (currentDancer + 1) % 4;
 
-        Dancer(currentDancer.ToString());
-
-
-
+        switchDancer(currentDancer);
 
     }
+
+    IEnumerator measure_Average_Distance()
+    {
+        List<float> distances = new List<float>();
+
+
+        float averageDistance = 0.0f;
+
+
+        DistanceColorChanger dcc = GetComponent<DistanceColorChanger>();
+
+        while (gameActive)
+        {
+            if (!paused)
+            {
+                //TODO update measure function
+                //distances.Add(Vector2.Distance(new Vector2(indicator.transform.position.x, indicator.transform.position.z), new Vector2(dcc.target.transform.position.x, dcc.target.transform.position.z)));
+                yield return new WaitForSeconds(0.5f);
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+        int numberOfMeasurements = distances.Count;
+
+        foreach (float d in distances)
+        {
+            averageDistance += d / numberOfMeasurements;
+        }
+
+        Scoreboard.text = averageDistance.ToString() + "\n" + Scoreboard.text;
+    }
+
+    public void Pause()
+    {
+        paused = !paused;
+        animator.speed = paused ? 0.0f : speed;
+        return;
+    }
+
+    public void Reset()
+    {
+        animator.Rebind();
+        animator.Update(0f);
+        animator.Play("Idle", 0, 0f);
+        gameActive = false;
+        paused = false;
+        animator.speed = speed;
+    }
+
+    public void change_Speed(float new_speed)
+    {
+        speed = new_speed;
+    }
+
+
+    public void StepBack1Frame()
+    {
+
+        StepFrames(-1);
+    }
+
+    public void StepForward1Frame()
+    {
+        StepFrames(1);
+    }
+
+    private void StepFrames(int frameCount)
+    {
+        if (animator == null) return;
+
+        // Pause Animator so manual stepping works
+        animator.speed = 0f;
+
+        int layerCount = animator.layerCount;
+        float frameTime = 1f / frameRate; // fraction of animation per frame
+
+        for (int i = 0; i < layerCount; i++)
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(i);
+            int currentStateHash = stateInfo.shortNameHash;
+
+            // Calculate new normalizedTime
+            float newTime = stateInfo.normalizedTime + frameTime * frameCount;
+
+            // Clamp between 0 and 1 to avoid going out of bounds
+            newTime = Mathf.Clamp01(newTime);
+
+            // Apply the new time to the current layer
+            animator.Play(currentStateHash, i, newTime);
+        }
+
+        animator.Update(0f); // Apply changes immediately
+    }
+
+
+
+
 
 
 
